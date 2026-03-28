@@ -25,6 +25,7 @@
             align-items: center;
             background-color: rgba(15, 23, 42, 0.95);
             border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+            position: relative;
         }
 
         .logo {
@@ -33,11 +34,18 @@
             color: #38bdf8;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            color: #cbd5e1;
+        .powered-by-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .highlight {
+            color: #38bdf8;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
         }
 
         .hero {
@@ -60,6 +68,7 @@
             color: #94a3b8;
             max-width: 700px;
             margin: 0 auto;
+            line-height: 1.6;
         }
 
         .main-card {
@@ -170,6 +179,22 @@
             background-color: rgba(148, 163, 184, 0.08);
         }
 
+        .status-message {
+            margin-top: 16px;
+            text-align: center;
+            min-height: 22px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .status-message.error {
+            color: #fca5a5;
+        }
+
+        .status-message.success {
+            color: #86efac;
+        }
+
         .features {
             width: 85%;
             max-width: 1000px;
@@ -199,39 +224,33 @@
             line-height: 1.5;
         }
 
-        .powered-by-nav {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-            color: #94a3b8;
-        } 
-
-        .highlight {
-            color: #38bdf8;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
+        .about {
+            width: 85%;
+            max-width: 900px;
+            margin: 80px auto;
+            text-align: center;
         }
 
-        .about {
-    width: 85%;
-    max-width: 900px;
-    margin: 80px auto;
-    text-align: center;
-}
+        .about h2 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+        }
 
-.about h2 {
-    color: #38bdf8;
-    margin-bottom: 15px;
-}
+        .about p {
+            color: #94a3b8;
+            line-height: 1.6;
+            font-size: 15px;
+        }
 
-.about p {
-    color: #94a3b8;
-    line-height: 1.6;
-    font-size: 15px;
-}
+        hr {
+            margin-top: 60px;
+            width: 70%;
+            height: 2px;
+            background-color: #38bdf8;
+            border: none;
+        }
 
-@media (max-width: 900px) {
+        @media (max-width: 900px) {
             .features {
                 grid-template-columns: 1fr;
             }
@@ -240,12 +259,22 @@
                 font-size: 38px;
             }
 
-            .main-card {
+            .main-card,
+            .features,
+            .about {
                 width: 92%;
             }
 
-            .features {
-                width: 92%;
+            .powered-by-nav {
+                position: static;
+                transform: none;
+                margin-left: auto;
+                font-size: 12px;
+            }
+
+            .navbar {
+                gap: 12px;
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -253,18 +282,16 @@
 <body>
     <div class="navbar">
         <div class="logo">srcAnalyzer</div>
-
         <div class="powered-by-nav">
-        Powered by src<span class="highlight">ML</span>
-    </div>
-
-        
+            Powered by src<span class="highlight">ML</span>
+        </div>
     </div>
 
     <section class="hero">
         <h1>Secure Your <span>Code</span></h1>
         <p>
-            Paste your code in and let srcAnalyzer do its magic and reveal sneaky flaws, risky structures, and under developed code in seconds.
+            Paste your C++ code and let srcAnalyzer reveal risky functions,
+            insecure input patterns, and maintainability issues in seconds.
         </p>
     </section>
 
@@ -283,49 +310,121 @@
         <textarea id="codeInput" placeholder="Paste your C++ code here..."></textarea>
 
         <div class="actions">
-            <button class="primary-btn">Analyze Code</button>
-            <button class="secondary-btn">Clear</button>
+            <button class="primary-btn" id="analyzeBtn">Analyze Code</button>
+            <button class="secondary-btn" id="clearBtn">Clear</button>
         </div>
+
+        <div id="statusMessage" class="status-message"></div>
     </div>
 
     <section class="features">
         <div class="feature-card">
-            <h3>Common Issue</h3>
-            <p>Many developers fall to a common issue of implementing poorly designed code, including developers at large tech enterprises.</p>
+            <h3>Security First</h3>
+            <p>
+                Detect dangerous C and C++ functions that can lead to memory safety
+                issues and command execution risks.
+            </p>
         </div>
 
         <div class="feature-card">
-            <h3>Super Fast Analysis</h3>
-            <p>Get quick realiable feedback on code health through a clean and trustworthy interface.</p>
+            <h3>Fast Analysis</h3>
+            <p>
+                Get quick, reliable feedback on code health through a clean and
+                trustworthy interface built for demos and developers alike.
+            </p>
         </div>
 
         <div class="feature-card">
-            <h3>Security</h3>
-            <p>The most important goal here is security, and we hold it to the highest standard and priority.</p>
+            <h3>Powered by Structure</h3>
+            <p>
+                srcML transforms source code into XML so srcAnalyzer can inspect code
+                structure instead of relying only on plain text matching.
+            </p>
         </div>
     </section>
 
-<hr style="margin-top: 60px; width: 70%; height: 2px; background-color: #38bdf8; border: none;">    <section class="about">
-    <h2>About srcAnalyzer</h2>
+    <hr>
 
-    <p>
-        This project is powered by <strong>srcML</strong>, an open-source technology
-        originally developed at <strong>Kent State University</strong> by
-        Professor <strong>Jonathan I. Maletic</strong> and <strong>Michael L. Collard</strong>.
-        srcML converts source code into a structured XML format, enabling powerful
-        analysis, transformation, and a deep dive into code written by all developers. 
-    </p>
+    <section class="about">
+        <h2>About srcAnalyzer</h2>
 
-    <p>
-        By leveraging srcML, srcAnalyzer provides fast and meaningful insights,
-        helping developers write cleaner, more maintainable, and secure code.
-    </p>
+        <p>
+            This project is powered by <strong>srcML</strong>, an open-source technology
+            originally developed at <strong>Kent State University</strong> by
+            Professor <strong>Jonathan I. Maletic</strong> and <strong>Michael L. Collard</strong>.
+            srcML converts source code into structured XML, enabling deeper analysis
+            of how code is written.
+        </p>
 
-    <p>
-        Developed here at the Kent Hack Enough 2026 Hackathon by
-        <strong>Roba Abdeta</strong>, <strong>Anthony Ross</strong>, <strong>Shagai Herdman</strong>, and <strong>Kalvik Ram Pemmasani
-</strong>
-    </p>
-</section>
+        <p>
+            By leveraging srcML, srcAnalyzer provides fast and meaningful insights
+            to help developers write cleaner, more maintainable, and more secure C++ code.
+        </p>
+
+        <p>
+            Developed at Kent Hack Enough 2026 by
+            <strong>Roba Abdeta</strong>, <strong>Anthony Ross</strong>,
+            <strong>Shagai Herdman</strong>, and <strong>Kalvik Ram Pemmasani</strong>.
+        </p>
+    </section>
+
+    <script>
+        const codeInput = document.getElementById("codeInput");
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const statusMessage = document.getElementById("statusMessage");
+
+        function setStatus(message, type = "") {
+            statusMessage.textContent = message;
+            statusMessage.className = "status-message";
+            if (type) {
+                statusMessage.classList.add(type);
+            }
+        }
+
+        analyzeBtn.addEventListener("click", async () => {
+            const code = codeInput.value.trim();
+
+            if (!code) {
+                setStatus("Please paste some C++ code first.", "error");
+                return;
+            }
+
+            setStatus("Analyzing code...", "success");
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = "Analyzing...";
+
+            try {
+                const response = await fetch("/analyze", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    setStatus(data.error || "Analysis failed.", "error");
+                    return;
+                }
+
+                localStorage.setItem("analysisData", JSON.stringify(data));
+                window.location.href = "/results";
+            } catch (error) {
+                console.error(error);
+                setStatus("Could not connect to the backend.", "error");
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = "Analyze Code";
+            }
+        });
+
+        clearBtn.addEventListener("click", () => {
+            codeInput.value = "";
+            setStatus("");
+        });
+    </script>
 </body>
 </html>
