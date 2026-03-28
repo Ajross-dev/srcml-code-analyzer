@@ -63,8 +63,7 @@ def get_line_number(node: ET.Element) -> Optional[str]:
     Try to recover line number information if present.
     """
     for key, value in node.attrib.items():
-        lower_key = key.lower()
-        if "line" in lower_key:
+        if "line" in key.lower():
             return value
     return None
 
