@@ -1,40 +1,18 @@
-# analyzer.py
-#
-# Purpose:
-# Runs srcML on a source file, parses the XML, extracts useful code
-# structures such as function calls, and sends them to rules.py for
-# security checks.
-#
-# Usage:
-#   python analyzer.py samples/test.cpp
-#
-# Expected rules.py functions:
-#   check_dangerous_calls(calls) -> list[dict]
-#   calculate_score(findings) -> int
-
 from __future__ import annotations
 
 import os
-import sys
 import shutil
 import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
 
-from rules import check_dangerous_calls, calculate_score
+from rules import calculate_score, check_code_smells, check_dangerous_calls
 
 
 def run_srcml(file_path: str) -> str:
     """
-    Convert a source file into srcML XML using the srcml command.
-
-    REQUIRES:
-        - file_path exists
-        - srcml is installed and available on PATH
-
-    ENSURES:
-        - returns XML as a string
-        - raises an exception if conversion fails
+    Run srcML on a C++ source file and return XML output.
     """
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"Source file not found: {file_path}")
@@ -42,12 +20,12 @@ def run_srcml(file_path: str) -> str:
     if shutil.which("srcml") is None:
         raise RuntimeError(
             "srcML is not installed or not on PATH. "
-            "Install srcML and make sure the 'srcml' command works in terminal."
+            "Install srcML and make sure the 'srcml' command works."
         )
 
     try:
         result = subprocess.run(
-            ["srcml", file_path],
+            ["srcml", "--language", "C++", file_path],
             capture_output=True,
             text=True,
             check=True
@@ -60,13 +38,7 @@ def run_srcml(file_path: str) -> str:
 
 def parse_xml(xml_text: str) -> ET.Element:
     """
-    Parse XML text into an ElementTree root node.
-
-    REQUIRES:
-        - xml_text is valid XML
-
-    ENSURES:
-        - returns root XML element
+    Parse srcML XML text into an ElementTree root.
     """
     try:
         return ET.fromstring(xml_text)
@@ -75,37 +47,31 @@ def parse_xml(xml_text: str) -> ET.Element:
 
 
 def strip_namespace(tag: str) -> str:
-    """
-    Remove XML namespace from a tag.
-
-    Example:
-        '{http://www.srcML.org/srcML/src}call' -> 'call'
-    """
     if "}" in tag:
         return tag.split("}", 1)[1]
     return tag
 
 
 def get_full_text(node: Optional[ET.Element]) -> str:
-    """
-    Collect all text from a node and its children.
-    """
     if node is None:
         return ""
     return "".join(node.itertext()).strip()
 
 
-def get_function_name(call_node: ET.Element) -> str:
+def get_line_number(node: ET.Element) -> Optional[str]:
     """
-    Extract function name from a srcML <call> node.
+    Try to recover line number information if present.
+    """
+    for key, value in node.attrib.items():
+        lower_key = key.lower()
+        if "line" in lower_key:
+            return value
+    return None
 
-    srcML usually stores function calls like:
-        <call>
-          <name>gets</name>
-          <argument_list>(...)</argument_list>
-        </call>
 
-    This function attempts to recover the call name even if nested.
+def get_call_name(call_node: ET.Element) -> str:
+    """
+    Extract the function name from a srcML <call> node.
     """
     for child in call_node:
         if strip_namespace(child.tag) == "name":
@@ -113,39 +79,14 @@ def get_function_name(call_node: ET.Element) -> str:
     return ""
 
 
-def get_line_number(node: ET.Element) -> Optional[str]:
-    """
-    Try to recover line number information if present in srcML attributes.
-    Different srcML builds/configurations may or may not include positions.
-    """
-    for key, value in node.attrib.items():
-        lowered = key.lower()
-        if "line" in lowered:
-            return value
-    return None
-
-
 def extract_function_calls(root: ET.Element) -> List[Dict[str, Any]]:
-    """
-    Extract function calls from srcML XML.
-
-    Returns a list like:
-    [
-        {
-            "function": "gets",
-            "text": "gets(buffer)",
-            "line": "12"
-        },
-        ...
-    ]
-    """
     calls: List[Dict[str, Any]] = []
 
     for node in root.iter():
         if strip_namespace(node.tag) != "call":
             continue
 
-        function_name = get_function_name(node)
+        function_name = get_call_name(node)
         call_text = get_full_text(node)
         line_number = get_line_number(node)
 
@@ -159,77 +100,87 @@ def extract_function_calls(root: ET.Element) -> List[Dict[str, Any]]:
     return calls
 
 
-def analyze_file(file_path: str) -> Dict[str, Any]:
+def extract_functions(root: ET.Element) -> List[Dict[str, Any]]:
     """
-    Run the complete analysis pipeline on a source file.
+    Extract function definitions for code smell checks.
+    """
+    functions: List[Dict[str, Any]] = []
 
-    Steps:
-        1. Convert source to srcML XML
-        2. Parse XML
-        3. Extract function calls
-        4. Send calls to rules.py
-        5. Calculate score
-        6. Return structured results
-    """
+    for node in root.iter():
+        if strip_namespace(node.tag) != "function":
+            continue
+
+        function_name = "unknown"
+        line_number = get_line_number(node)
+        text = get_full_text(node)
+
+        for child in node:
+            if strip_namespace(child.tag) == "name":
+                function_name = get_full_text(child)
+                break
+
+        functions.append({
+            "name": function_name,
+            "text": text,
+            "line": line_number,
+            "length_estimate": len(text.splitlines()) if text else 0
+        })
+
+    return functions
+
+
+def analyze_file(file_path: str) -> Dict[str, Any]:
     xml_text = run_srcml(file_path)
     root = parse_xml(xml_text)
-    calls = extract_function_calls(root)
 
-    findings = check_dangerous_calls(calls)
+    calls = extract_function_calls(root)
+    functions = extract_functions(root)
+
+    findings: List[Dict[str, Any]] = []
+    findings.extend(check_dangerous_calls(calls))
+    findings.extend(check_code_smells(functions, calls))
+
     score = calculate_score(findings)
 
     return {
         "file": file_path,
-        "score": score,
         "calls": calls,
-        "findings": findings
+        "functions": functions,
+        "findings": findings,
+        "score": score
     }
 
 
-def print_results(results: Dict[str, Any]) -> None:
+def analyze_code_text(code: str) -> Dict[str, Any]:
     """
-    Pretty-print results for terminal testing.
+    Analyze pasted C++ code by writing it to a temporary .cpp file.
     """
-    print(f"\nAnalyzed File: {results['file']}")
-    print(f"Security Score: {results['score']}")
-    print("-" * 50)
-
-    findings = results.get("findings", [])
-    if not findings:
-        print("No risky patterns detected.")
-        return
-
-    for index, finding in enumerate(findings, start=1):
-        severity = finding.get("severity", "Unknown")
-        issue = finding.get("issue", "No issue message provided.")
-        explanation = finding.get("explanation", "No explanation provided.")
-        function_name = finding.get("function", "Unknown")
-        line_number = finding.get("line", "Unknown")
-
-        print(f"{index}. [{severity}] {issue}")
-        print(f"   Function: {function_name}")
-        print(f"   Line: {line_number}")
-        print(f"   Reason: {explanation}")
-        print()
-
-
-def main() -> None:
-    """
-    CLI entry point for quick backend testing.
-    """
-    if len(sys.argv) != 2:
-        print("Usage: python analyzer.py <source-file>")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
+    temp_path = None
 
     try:
-        results = analyze_file(file_path)
-        print_results(results)
-    except Exception as exc:
-        print(f"Error: {exc}")
-        sys.exit(1)
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".cpp",
+            delete=False,
+            encoding="utf-8"
+        ) as temp_file:
+            temp_file.write(code)
+            temp_path = temp_file.name
+
+        return analyze_file(temp_path)
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 
 if __name__ == "__main__":
-    main()
+    import json
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: python analyzer.py <cpp-file>")
+        raise SystemExit(1)
+
+    result = analyze_file(sys.argv[1])
+    print(json.dumps(result, indent=2))
