@@ -105,7 +105,21 @@
         }
 
         .issue-item {
-            margin-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .issue-meta {
+            color: #94a3b8;
+            font-size: 0.92rem;
+        }
+
+        .issue-severity {
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        .empty-state {
+            color: #cbd5e1;
         }
 
         .code-preview {
@@ -152,15 +166,14 @@
 <body>
     <div class="container">
         <h1>Analysis Results</h1>
-        <p class="subtitle">srcAnalyzer review of your submitted code</p>
+        <p class="subtitle">srcAnalyzer review of your submitted C++ code</p>
 
         <hr>
 
         <div class="section">
             <h2>Summary</h2>
             <p class="summary-text" id="summary">
-                Your code was analyzed for possible style, readability, and maintainability issues.
-                Below is a breakdown of the findings and suggestions for improvement.
+                Loading analysis summary...
             </p>
         </div>
 
@@ -181,7 +194,7 @@
                 </div>
                 <div class="stat-card">
                     <h3 id="score">0%</h3>
-                    <p>Code Quality Score</p>
+                    <p>Security Score</p>
                 </div>
             </div>
         </div>
@@ -189,23 +202,23 @@
         <div class="section">
             <h2>Risk Level</h2>
             <div class="risk-box">
-                Overall Risk: <span class="risk-level" id="riskLevel">Moderate</span><br><br>
-                This score reflects how many possible code quality issues were detected.
-                Fewer issues generally means cleaner and more maintainable code.
+                Overall Risk: <span class="risk-level" id="riskLevel">Unknown</span><br><br>
+                This score reflects how many security and maintainability issues were
+                detected in the submitted C++ code.
             </div>
         </div>
 
         <div class="section">
             <h2>Detected Issues</h2>
             <div id="results">
-                <p>Analyzing...</p>
+                <p class="empty-state">Loading results...</p>
             </div>
         </div>
 
         <div class="section">
             <h2>Suggestions</h2>
             <ul id="suggestions">
-                <li>Suggestions will appear here after analysis.</li>
+                <li>Loading suggestions...</li>
             </ul>
         </div>
 
@@ -219,69 +232,73 @@
             <button onclick="downloadReport()">Download Report</button>
         </div>
 
-        <p class="footer-note">This is a frontend prototype. Real analysis can be connected to the backend later.</p>
+        <p class="footer-note">Analysis powered by srcML and srcAnalyzer security rules.</p>
     </div>
 
     <script>
-        let code = localStorage.getItem("code") || "";
+        const analysisData = JSON.parse(localStorage.getItem("analysisData") || "null");
 
-        let issues = [
-            "Function may be too long",
-            "Variable name 'x' is unclear",
-            "No comments found"
-        ];
+        const resultsDiv = document.getElementById("results");
+        const suggestionsDiv = document.getElementById("suggestions");
+        const codePreview = document.getElementById("codePreview");
+        const summary = document.getElementById("summary");
 
-        let suggestions = [
-            "Break large functions into smaller helper functions.",
-            "Use clearer variable names that describe purpose.",
-            "Add comments to explain important logic."
-        ];
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        let resultsDiv = document.getElementById("results");
-        let suggestionsDiv = document.getElementById("suggestions");
-        let codePreview = document.getElementById("codePreview");
-
-        if (issues.length > 0) {
-            resultsDiv.innerHTML =
-                "<ul>" +
-                issues.map(issue => `<li class="issue-item">${issue}</li>`).join("") +
-                "</ul>";
+        if (!analysisData || !analysisData.success) {
+            summary.textContent = "No analysis data was found. Please return to the home page and run a new analysis.";
+            resultsDiv.innerHTML = '<p class="empty-state">No results available.</p>';
+            suggestionsDiv.innerHTML = "<li>No suggestions available.</li>";
+            codePreview.textContent = "No code submitted.";
+            document.getElementById("riskLevel").textContent = "Unknown";
         } else {
-            resultsDiv.innerHTML = "<p>No major issues found.</p>";
+            summary.textContent = analysisData.summary || "Analysis complete.";
+            codePreview.textContent = analysisData.codePreview || "No code submitted.";
+
+            document.getElementById("issueCount").textContent = analysisData.issueCount ?? 0;
+            document.getElementById("lineCount").textContent = analysisData.lineCount ?? 0;
+            document.getElementById("commentCount").textContent = analysisData.commentCount ?? 0;
+            document.getElementById("score").textContent = `${analysisData.score ?? 0}%`;
+            document.getElementById("riskLevel").textContent = analysisData.riskLevel || "Unknown";
+
+            if (analysisData.issues && analysisData.issues.length > 0) {
+                resultsDiv.innerHTML =
+                    "<ul>" +
+                    analysisData.issues.map(issue => `
+                        <li class="issue-item">
+                            <span class="issue-severity">${escapeHtml(issue.severity || "Unknown")}</span>:
+                            ${escapeHtml(issue.issue || "Issue detected")}
+                            <div>${escapeHtml(issue.explanation || "")}</div>
+                            <div class="issue-meta">
+                                Function: ${escapeHtml(issue.function || "Unknown")} |
+                                Line: ${escapeHtml(issue.line || "Unknown")}
+                            </div>
+                        </li>
+                    `).join("") +
+                    "</ul>";
+            } else {
+                resultsDiv.innerHTML = '<p class="empty-state">No major issues found.</p>';
+            }
+
+            if (analysisData.suggestions && analysisData.suggestions.length > 0) {
+                suggestionsDiv.innerHTML = analysisData.suggestions
+                    .map(suggestion => `<li>${escapeHtml(suggestion)}</li>`)
+                    .join("");
+            } else {
+                suggestionsDiv.innerHTML = "<li>No suggestions available.</li>";
+            }
         }
-
-        suggestionsDiv.innerHTML =
-            suggestions.map(s => `<li>${s}</li>`).join("");
-
-        codePreview.textContent = code ? code : "No code submitted.";
-
-        let lineCount = code ? code.split("\n").length : 0;
-        let commentCount = code ? (code.match(/\/\/|#/g) || []).length : 0;
-        let issueCount = issues.length;
-
-        let score = Math.max(100 - issueCount * 15, 40);
-
-        document.getElementById("issueCount").textContent = issueCount;
-        document.getElementById("lineCount").textContent = lineCount;
-        document.getElementById("commentCount").textContent = commentCount;
-        document.getElementById("score").textContent = score + "%";
-
-        let riskLevel = "Low";
-        if (issueCount >= 3) {
-            riskLevel = "Moderate";
-        }
-        if (issueCount >= 5) {
-            riskLevel = "High";
-        }
-
-        document.getElementById("riskLevel").textContent = riskLevel;
 
         function goBack() {
-            window.location.href = "index.html";
+            window.location.href = "/";
         }
 
         function downloadReport() {
-            alert("Report download feature coming soon.");
+            window.print();
         }
     </script>
 </body>
