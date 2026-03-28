@@ -1,113 +1,331 @@
 <!DOCTYPE html>
-
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
-    </head>
-    <body>
-        <h1> This is yaydada</h1>
-        
-        
-        <script src="" async defer></script>
-    </body>
-</html>
-<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>srcAnalyzer</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0f172a;
-            color: white;
-            text-align: center;
             margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+            color: white;
         }
 
-        .container {
-            width: 70%;
-            margin: 50px auto;
+        .navbar {
+            width: 100%;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
         }
 
-        h1 {
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
             color: #38bdf8;
         }
 
-        p {
+        .nav-links {
+            display: flex;
+            gap: 20px;
             color: #cbd5e1;
+            font-size: 14px;
         }
 
-        hr {
-            margin: 20px auto;
-            width: 80%;
-            height: 2px;
-            background-color: #38bdf8;
-            border: none;
+        .hero {
+            text-align: center;
+            padding: 60px 20px 30px 20px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: #f8fafc;
+        }
+
+        .hero h1 span {
+            color: #38bdf8;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .main-card {
+            width: 85%;
+            max-width: 1000px;
+            margin: 30px auto 50px auto;
+            background-color: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+            text-align: left;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #0f172a;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-bottom: none;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #475569;
+        }
+
+        .file-label {
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-left: 10px;
         }
 
         textarea {
             width: 100%;
-            height: 250px;
-            border-radius: 10px;
-            padding: 10px;
-            font-family: monospace;
+            height: 320px;
+            resize: vertical;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 0 0 12px 12px;
+            border-top: none;
+            background-color: #020617;
+            color: #e2e8f0;
+            padding: 18px;
             font-size: 14px;
-            border: none;
+            line-height: 1.5;
+            font-family: Consolas, monospace;
+            outline: none;
         }
 
-        button {
+        textarea::placeholder {
+            color: #64748b;
+        }
+
+        .actions {
             margin-top: 20px;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            background-color: #38bdf8;
-            color: black;
-            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
         }
 
-        button:hover {
+        .primary-btn {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .primary-btn:hover {
             background-color: #0ea5e9;
+            transform: translateY(-1px);
+        }
+
+        .secondary-btn {
+            background-color: transparent;
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            padding: 14px 24px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .secondary-btn:hover {
+            background-color: rgba(148, 163, 184, 0.08);
+        }
+
+        .features {
+            width: 85%;
+            max-width: 1000px;
+            margin: 0 auto 60px auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .feature-card {
+            background-color: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.12);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .feature-card h3 {
+            margin-top: 0;
+            color: #38bdf8;
+            font-size: 18px;
+        }
+
+        .feature-card p {
+            margin-bottom: 0;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .powered-by-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #94a3b8;
+        } 
+
+        .highlight {
+            color: #38bdf8;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
+        }
+
+        .about {
+    width: 85%;
+    max-width: 900px;
+    margin: 80px auto;
+    text-align: center;
+}
+
+.about h2 {
+    color: #38bdf8;
+    margin-bottom: 15px;
+}
+
+.about p {
+    color: #94a3b8;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+@media (max-width: 900px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 38px;
+            }
+
+            .main-card {
+                width: 92%;
+            }
+
+            .features {
+                width: 92%;
+            }
         }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <h1>Secure Your Code</h1>
-        <p>Analyze your code for potential issues</p>
+    <div class="navbar">
+        <div class="logo">srcAnalyzer</div>
 
-        <hr>
-
-        <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
-
-        <br>
-
-        <button onclick="goToResults()">Analyze Code</button>
+        <div class="powered-by-nav">
+        Powered by src<span class="highlight">ML</span>
     </div>
 
-    <script>
-        function goToResults() {
-            let code = document.getElementById("codeInput").value;
+        
+    </div>
 
-            if (code.trim() === "") {
-                alert("Please paste some code first.");
-                return;
-            }
+    <section class="hero">
+        <h1>Secure Your <span>Code</span></h1>
+        <p>
+            Paste your code in and let srcAnalyzer do its magic and reveal sneaky flaws, risky structures, and under developed code in seconds.
+        </p>
+    </section>
 
-            // Save code so results page can access it
-            localStorage.setItem("code", code);
+    <div class="main-card">
+        <div class="section-title">Code Input</div>
 
-            // Go to results page
-            window.location.href = "results.html";
-        }
-    </script>
+        <div class="editor-toolbar">
+            <div class="toolbar-left">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="file-label">main.cpp</div>
+            </div>
+        </div>
+
+        <textarea id="codeInput" placeholder="Paste your C++ code here..."></textarea>
+
+        <div class="actions">
+            <button class="primary-btn">Analyze Code</button>
+            <button class="secondary-btn">Clear</button>
+        </div>
+    </div>
+
+    <section class="features">
+        <div class="feature-card">
+            <h3>Common Issue</h3>
+            <p>Many developers fall to a common issue of implementing poorly designed code, including developers at large tech enterprises.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Super Fast Analysis</h3>
+            <p>Get quick realiable feedback on code health through a clean and trustworthy interface.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Security</h3>
+            <p>The most important goal here is security, and we hold it to the highest standard and priority.</p>
+        </div>
+    </section>
+
+<hr style="margin-top: 60px; width: 70%; height: 2px; background-color: #38bdf8; border: none;">    <section class="about">
+    <h2>About srcAnalyzer</h2>
+
+    <p>
+        This project is powered by <strong>srcML</strong>, an open-source technology
+        originally developed at <strong>Kent State University</strong> by
+        Professor <strong>Jonathan I. Maletic</strong> and <strong>Michael L. Collard</strong>.
+        srcML converts source code into a structured XML format, enabling powerful
+        analysis, transformation, and a deep dive into code written by all developers. 
+    </p>
+
+    <p>
+        By leveraging srcML, srcAnalyzer provides fast and meaningful insights,
+        helping developers write cleaner, more maintainable, and secure code.
+    </p>
+
+    <p>
+        Developed here at the Kent Hack Enough 2026 Hackathon by
+        <strong>Roba Abdeta</strong>, <strong>Anthony Ross</strong>, <strong>Shagai Herdman</strong>, and <strong>Kalvik Ram Pemmasani
+</strong>
+    </p>
+</section>
 </body>
 </html>
