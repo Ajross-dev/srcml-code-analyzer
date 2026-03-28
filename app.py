@@ -18,10 +18,7 @@ def count_lines(code: str) -> int:
 
 def count_comments(code: str) -> int:
     """
-    Count C++ comments in a simple way.
-    Counts:
-      - lines containing //
-      - lines containing /*
+    Count simple C++ comment markers.
     """
     if not code.strip():
         return 0
@@ -37,7 +34,7 @@ def count_comments(code: str) -> int:
 
 def looks_like_cpp(code: str) -> bool:
     """
-    Lightweight heuristic check to reject obvious non-C++ input.
+    Lightweight heuristic check for obvious C++ input.
     srcML still does the real parsing.
     """
     if not code or not code.strip():
@@ -45,7 +42,7 @@ def looks_like_cpp(code: str) -> bool:
 
     cpp_markers = [
         r"#include\s*<",
-        r"#include\s*\"",
+        r'#include\s*"',
         r"\bstd::",
         r"\busing\s+namespace\s+std\b",
         r"\bint\s+main\s*\(",
