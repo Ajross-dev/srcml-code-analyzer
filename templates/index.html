@@ -13,10 +13,103 @@
         <link rel="stylesheet" href="">
     </head>
     <body>
-        <!--[if lt IE 7]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
+
         
         <script src="" async defer></script>
     </body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>srcAnalyzer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+            margin: 0;
+        }
+
+        .container {
+            width: 70%;
+            margin: 50px auto;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        p {
+            color: #cbd5e1;
+        }
+
+        hr {
+            margin: 20px auto;
+            width: 80%;
+            height: 2px;
+            background-color: #38bdf8;
+            border: none;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            border: none;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            background-color: #38bdf8;
+            color: black;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0ea5e9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Secure Your Code</h1>
+        <p>Analyze your code for potential issues</p>
+
+        <hr>
+
+        <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
+
+        <br>
+
+        <button onclick="goToResults()">Analyze Code</button>
+    </div>
+
+    <script>
+        function goToResults() {
+            let code = document.getElementById("codeInput").value;
+
+            if (code.trim() === "") {
+                alert("Please paste some code first.");
+                return;
+            }
+
+            // Save code so results page can access it
+            localStorage.setItem("code", code);
+
+            // Go to results page
+            window.location.href = "results.html";
+        }
+    </script>
+</body>
 </html>
