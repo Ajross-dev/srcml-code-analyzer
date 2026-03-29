@@ -80,8 +80,8 @@ def determine_risk_level(score: int, findings_count: int) -> str:
 def build_summary(score: int, findings: List[Dict[str, Any]]) -> str:
     if not findings:
         return (
-            "No major insecure C++ patterns were detected by the current rule set. "
-            "The analyzer did not find flagged calls or risky input usage."
+            "No major insecure or maintainability-related C++ patterns were detected "
+            "by the current srcAnalyzer rule set."
         )
 
     high_count = sum(1 for item in findings if item.get("severity") == "High")
@@ -90,8 +90,9 @@ def build_summary(score: int, findings: List[Dict[str, Any]]) -> str:
 
     return (
         f"The analyzer found {len(findings)} issue(s) in the submitted C++ code. "
-        f"Security score: {score}%. "
-        f"High: {high_count}, Medium: {medium_count}, Low: {low_count}."
+        f"Overall score: {score}%. "
+        f"High: {high_count}, Medium: {medium_count}, Low: {low_count}. "
+        f"The findings include security risks, maintainability concerns, and code-quality warnings."
     )
 
 
