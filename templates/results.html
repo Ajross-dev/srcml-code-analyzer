@@ -98,24 +98,118 @@
             color: #fbbf24;
         }
 
-        ul {
-            padding-left: 20px;
-            line-height: 1.8;
-            color: #e2e8f0;
+        .issues-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .issue-item {
-            margin-bottom: 14px;
+        .issue-card {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-left: 6px solid #38bdf8;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .issue-card.high {
+            border-left-color: #ef4444;
+        }
+
+        .issue-card.medium {
+            border-left-color: #f59e0b;
+        }
+
+        .issue-card.low {
+            border-left-color: #22c55e;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .issue-title {
+            margin: 0;
+            color: #f8fafc;
+            font-size: 1.05rem;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .severity-badge.high {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .severity-badge.medium {
+            background-color: #78350f;
+            color: #fde68a;
+        }
+
+        .severity-badge.low {
+            background-color: #14532d;
+            color: #bbf7d0;
+        }
+
+        .issue-body {
+            color: #e2e8f0;
+            line-height: 1.6;
         }
 
         .issue-meta {
             color: #94a3b8;
             font-size: 0.92rem;
+            margin-top: 10px;
         }
 
-        .issue-severity {
+        .ai-btn {
+            margin-top: 14px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            background-color: #38bdf8;
+            color: #0f172a;
             font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .ai-btn:hover {
+            background-color: #0ea5e9;
+        }
+
+        .ai-reply {
+            display: none;
+            margin-top: 14px;
+            background-color: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px;
+            color: #e2e8f0;
+            line-height: 1.65;
+        }
+
+        .ai-reply-title {
             color: #38bdf8;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            line-height: 1.8;
+            color: #e2e8f0;
         }
 
         .empty-state {
@@ -245,8 +339,74 @@
 
         function escapeHtml(text) {
             const div = document.createElement("div");
-            div.textContent = text;
+            div.textContent = text ?? "";
             return div.innerHTML;
+        }
+
+        function severityClass(severity) {
+            const value = (severity || "").toLowerCase();
+            if (value === "high") return "high";
+            if (value === "medium") return "medium";
+            return "low";
+        }
+
+        function buildAiReply(issue) {
+            const issueName = issue.issue || "This issue";
+            const severity = issue.severity || "Unknown";
+            const explanation = issue.explanation || "No explanation available.";
+            const suggestion = issue.suggestion || "No fix suggestion available.";
+            const line = issue.line || "Unknown";
+            const func = issue.function || "Unknown";
+
+            return `
+                <div class="ai-reply-title">AI Reply</div>
+                <div>
+                    <strong>${escapeHtml(issueName)}</strong> was flagged as a
+                    <strong>${escapeHtml(severity)}</strong> risk.
+                </div>
+                <br>
+                <div>
+                    <strong>Why this matters:</strong><br>
+                    ${escapeHtml(explanation)}
+                </div>
+                <br>
+                <div>
+                    <strong>Where it appeared:</strong><br>
+                    Function: ${escapeHtml(func)}<br>
+                    Line: ${escapeHtml(line)}
+                </div>
+                <br>
+                <div>
+                    <strong>How to fix it:</strong><br>
+                    ${escapeHtml(suggestion)}
+                </div>
+                <br>
+                <div>
+                    <strong>Beginner-friendly explanation:</strong><br>
+                    This means the analyzer found a C++ pattern that could make the program less secure
+                    or harder to maintain. In a real application, this kind of issue can lead to problems
+                    like unsafe memory behavior, bad input handling, or risky command execution depending
+                    on the function being used.
+                </div>
+            `;
+        }
+
+        function toggleAiReply(button, replyId, issue) {
+            const replyBox = document.getElementById(replyId);
+
+            if (replyBox.style.display === "block") {
+                replyBox.style.display = "none";
+                button.textContent = "AI Explain";
+                return;
+            }
+
+            if (!replyBox.dataset.loaded) {
+                replyBox.innerHTML = buildAiReply(issue);
+                replyBox.dataset.loaded = "true";
+            }
+
+            replyBox.style.display = "block";
+            button.textContent = "Hide AI Reply";
         }
 
         if (!analysisData || !analysisData.success) {
@@ -266,20 +426,44 @@
             document.getElementById("riskLevel").textContent = analysisData.riskLevel || "Unknown";
 
             if (analysisData.issues && analysisData.issues.length > 0) {
-                resultsDiv.innerHTML =
-                    "<ul>" +
-                    analysisData.issues.map(issue => `
-                        <li class="issue-item">
-                            <span class="issue-severity">${escapeHtml(issue.severity || "Unknown")}</span>:
-                            ${escapeHtml(issue.issue || "Issue detected")}
-                            <div>${escapeHtml(issue.explanation || "")}</div>
-                            <div class="issue-meta">
-                                Function: ${escapeHtml(issue.function || "Unknown")} |
-                                Line: ${escapeHtml(issue.line || "Unknown")}
-                            </div>
-                        </li>
-                    `).join("") +
-                    "</ul>";
+                resultsDiv.innerHTML = "";
+                const issuesList = document.createElement("div");
+                issuesList.className = "issues-list";
+
+                analysisData.issues.forEach((issue, index) => {
+                    const card = document.createElement("div");
+                    card.className = `issue-card ${severityClass(issue.severity)}`;
+
+                    const replyId = `ai-reply-${index}`;
+
+                    card.innerHTML = `
+                        <div class="issue-header">
+                            <h3 class="issue-title">${escapeHtml(issue.issue || "Issue detected")}</h3>
+                            <span class="severity-badge ${severityClass(issue.severity)}">
+                                ${escapeHtml(issue.severity || "Unknown")}
+                            </span>
+                        </div>
+
+                        <div class="issue-body">
+                            ${escapeHtml(issue.explanation || "No explanation available.")}
+                        </div>
+
+                        <div class="issue-meta">
+                            Function: ${escapeHtml(issue.function || "Unknown")} |
+                            Line: ${escapeHtml(issue.line || "Unknown")}
+                        </div>
+
+                        <button class="ai-btn">AI Explain</button>
+                        <div class="ai-reply" id="${replyId}"></div>
+                    `;
+
+                    const button = card.querySelector(".ai-btn");
+                    button.addEventListener("click", () => toggleAiReply(button, replyId, issue));
+
+                    issuesList.appendChild(card);
+                });
+
+                resultsDiv.appendChild(issuesList);
             } else {
                 resultsDiv.innerHTML = '<p class="empty-state">No major issues found.</p>';
             }
